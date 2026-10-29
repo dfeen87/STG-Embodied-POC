@@ -12,7 +12,15 @@
 
 ## Purpose
 
-The **Spiral-Time Governor** (STG) is a deterministic external supervision layer that wraps a black-box LLM and gates its outputs (claims + actions) based on a scalar instability functional ΔΦ(t), as described in §3.2 of the companion paper.  This repository demonstrates that the STG architecture transfers from the synthetic noise model evaluated in the paper to a real physics simulator, using dm_control's built-in quadruped domain ("escape" task) as a proxy for the custom ANYmal-class terrain tasks described in the paper.  All governor parameters, thresholds, and evaluation metrics are identical to the synthetic testbed v2.2.
+The **Spiral-Time Governor** (STG) is a deterministic external supervision layer that wraps a black-box LLM and gates its outputs (claims + actions) based on a scalar instability functional ΔΦ(t), as described in §3.2 of the companion paper. This repository contains a MuJoCo/dm_control quadruped implementation using the built-in "escape" task as a proxy for legged locomotion. It supports inspection of supervisory logic; the archived results do not independently establish a physical-safety improvement attributable to STG.
+
+### Figure 3 and evidence clarification — 29 October 2026
+
+The historical numerical reports use different aggregate versions and unresolved original run provenance. The reviewed runner counts failed checks on proposed actions conditional on governor mode, while the simulator receives gated actions. A lower diagnostic counter therefore does not establish fewer independently measured physical hazards.
+
+![Figure 3: descriptive archived diagnostic summaries](docs/figure3/figure3_archived_diagnostics.png)
+
+**Figure 3. Archived diagnostic summaries.** The plotted values are descriptive aggregates with unauthenticated original run provenance and sample counts; they do not establish independently measured physical-safety improvement. Panel B error bars are archived standard deviations. *real_llm is a historical source-file label; original model/run records are unauthenticated.* See the [proposed manuscript caption and source mapping](docs/figure3/README.md).
 
 > **Note:** This PoC uses the dm_control quadruped "escape" task as a physics-grounded proxy for the custom ANYmal-class terrain locomotion tasks described in the paper.  The escape task provides realistic contact dynamics and proprioceptive observations without requiring a licensed ANYmal model.
 
@@ -33,30 +41,30 @@ python run_experiment.py --seeds 0 1 2 --conditions baseline governor
 # 4. Run with verbose per-step output
 python run_experiment.py --conditions governor --seeds 0 --verbose
 
-# 5. Run robustness check (held-out seeds 40–49)
+# 5. Run the configured diagnostic script (seeds 40–49; not historical validation)
 bash scripts/run_robustness.sh
 
 # 6. Recompute metrics from saved results
 python analysis/compute_metrics.py --results_dir results/
 ```
 
-Results are written to `results/` as CSV and JSON files (see [Output Files](#output-files) below).
+These commands describe prospective software runs, not independent verification of archived findings. Results are written to `results/` as CSV and JSON files (see [Output Files](#output-files) below). The configured diagnostic scripts do not by themselves establish robustness or physical-safety benefit.
 
 ---
 
-## Full Reproducibility (One Command)
+## Reproducing archived figure presentations
 
 **Environment:** Python 3.10+, MuJoCo 3.x (see `requirements.txt` for full dependencies).
 
 All random seeds are fixed in [`config.py`](config.py) (`DEFAULT_SEEDS = list(range(10))`, `BOOTSTRAP_SEED = 77`).
 
-To regenerate **all figures** used in the paper:
+To regenerate the **legacy repository figures** from the embedded aggregates and CSV files:
 
 ```bash
 python images/generate_plots.py
 ```
 
-This script reads the embedded simulation data and writes all eight figures (`fig1_*.png` – `fig8_*.png`) to the `images/` directory.
+This script reads embedded aggregate values and CSV files and writes the eight legacy figures (`fig1_*.png` – `fig8_*.png`) to `images/`. It does not reproduce the selected Figure 3 image above or independently reconstruct the missing original observations. Fixed seeds and regenerated plots do not authenticate the historical numerical contrasts, confidence intervals, or physical-safety claims. See [Figure 3 provenance](docs/figure3/README.md).
 
 ---
 
@@ -70,9 +78,9 @@ stg-embodied-poc/
 ├── .gitignore
 ├── CITATION.cff                # Citation metadata for the companion paper
 ├── LICENSE                     # MIT License
-├── PAPER.md                    # Companion paper (manuscript)
+├── PAPER.md                    # Historical manuscript; qualified claims
 ├── README.md
-├── VALIDATION_ANALYSIS.md      # Detailed validation results and statistical analysis
+├── VALIDATION_ANALYSIS.md      # Historical diagnostics; unverified safety effects
 ├── analysis/
 │   ├── __init__.py
 │   └── compute_metrics.py      # Metric computation from episode logs
@@ -113,7 +121,7 @@ stg-embodied-poc/
 ├── run_sensitivity_sweep.py    # One-at-a-time sensitivity sweep over ΔΦ weights (α, β, γ, δ)
 ├── scripts/
 │   ├── run_all.sh              # Full pipeline (all conditions, seeds 0–9)
-│   └── run_robustness.sh       # Robustness check (governor, seeds 40–49)
+│   └── run_robustness.sh       # Diagnostic script (governor, seeds 40–49)
 └── tests/
     ├── test_env.py
     ├── test_governor.py
@@ -141,7 +149,9 @@ stg-embodied-poc/
 | `τ₂`      | 0.55  | VERIFY → SAFE threshold | §3.3 |
 | `φ₀`      | 0.75  | Initial coherence score | §3.2 |
 
-### Experimental Design
+### Configured Experimental Design
+
+The following values are software configuration entries. They do not authenticate the seed population, sample count, or uncertainty of any archived result.
 
 | Parameter            | Value                    | Description |
 |----------------------|--------------------------|-------------|
@@ -155,10 +165,10 @@ stg-embodied-poc/
 
 | Condition    | Ablation         | Hallucination Prob | Description |
 |--------------|------------------|--------------------|-------------|
-| `baseline`   | `always_execute` | 0.45               | No governor; all LLM actions executed |
+| `baseline`   | `always_execute` | 0.45               | Always-execute governor mode; the shared constraint checker still applies |
 | `governor`   | `none`           | 0.45               | Full STG with torsion term |
 | `ablation_a` | `no_delta`       | 0.45               | STG with δ=0 (torsion disabled) |
-| `rag`        | `always_execute` | 0.30               | No governor; reduced hallucination (RAG proxy) |
+| `rag`        | `always_execute` | 0.30               | Always-execute mode with lower configured hallucination probability; not a verified retrieval pipeline |
 
 ### CLI Arguments (`run_experiment.py`)
 
@@ -182,8 +192,8 @@ After running `run_experiment.py`, the `results/` directory contains:
 |------|-------------|
 | `results.json` | Flat per-episode metrics (H_T, violations, success, n_steps) for all conditions/seeds |
 | `summary.csv`  | One row per episode with all computed metrics (written by `compute_metrics.py`) |
-| `metrics.csv`  | Per-condition H_T, violation_rate and success_rate (three primary metrics) |
-| `ablations.csv` | Per-episode ablation comparison (governor vs δ=0, remove_I, remove_C) |
+| `metrics.csv`  | Recorded H_T, diagnostic violation counter and success summary; the archived aggregate file does not establish independent physical outcomes |
+| `ablations.csv` | Generated ablation summaries (governor vs δ=0, remove_I, remove_C); the committed historical aggregates and SD column do not establish significance or component necessity |
 | `<condition>_steps.csv` | Per-step logs for each condition (phi, delta_phi, mode, reward, oracle, …) |
 
 ---
@@ -192,7 +202,7 @@ After running `run_experiment.py`, the `results/` directory contains:
 
 ### Practical / Engineering Limitations
 
-1. **Synthetic vs. physics:** The mock LLM agent produces deterministic sinusoidal actions and rule-based claims.  Real LLM integration would require an API call layer (not included in this PoC).
+1. **Proposal source:** The mock agent produces deterministic sinusoidal actions and rule-based claims. An optional external-LLM API path exists, but the archived `real_llm` aggregates do not authenticate use of that path, the model identity, or the original run records.
 2. **Oracle simplifications:** The `oracle()` method approximates terrain class from the torso x-position and contact count from geom-name matching.  A production system would use richer sensor fusion.
 3. **Task proxy:** The dm_control quadruped "escape" task is a physics-grounded but simplified proxy for the ANYmal-class terrain tasks in the paper.  Custom terrain assets, gait controllers, and task reward shaping are outside the scope of this PoC.
 4. **Single-process execution:** Episodes are run sequentially; wall-clock time scales linearly with `n_seeds × n_conditions × MAX_STEPS`.
@@ -201,25 +211,25 @@ After running `run_experiment.py`, the `results/` directory contains:
 
 The following limitations are disclosed in the interest of academic transparency and to support appropriate interpretation of the reported results.
 
-- **Mock LLM vs. Real Reasoning.**  The deterministic mock LLM in `llm_mock/mock_llm_agent.py` does not represent real reasoning or real‑world LLM variability.  The mock agent is used deliberately to isolate the effect of the Spiral Time Governor (STG) without introducing confounding factors such as stochastic token sampling or prompt sensitivity.  A real LLM condition is included only to demonstrate robustness to non‑deterministic outputs; it does not constitute a claim of cognitive modeling.
+- **Mock LLM vs. Real Reasoning.**  The deterministic mock LLM in `llm_mock/mock_llm_agent.py` does not represent real reasoning or real‑world LLM variability.  The mock agent is used deliberately to isolate the effect of the Spiral Time Governor (STG) without introducing confounding factors such as stochastic token sampling or prompt sensitivity.  The archived `real_llm` condition label does not authenticate the original model identity or run metadata, and its aggregates do not independently establish robustness to non-deterministic outputs.
 
-- **Simplified Environment (dm_control Quadruped).**  `envs/quadruped_terrain.py` uses a controlled dm_control locomotion task as a proxy for embodied decision‑making.  This environment does not capture full real‑world terrain complexity, multi‑contact dynamics, or hardware constraints such as actuator saturation, communication latency, or mechanical compliance.  Results should therefore be interpreted as simulation‑level evidence and should not be taken as direct evidence of transfer to physical robotic platforms.
+- **Simplified Environment (dm_control Quadruped).** The quadruped "escape" task provides a physics-based proxy, not an independently validated safety benchmark. The archived diagnostic counters do not establish safer simulated motion or transfer to hardware, including actuator limits, latency, contact complexity, or mechanical compliance.
 
-- **Oracle Simplifications.**  The oracle used for action verification is simplified and relies on idealized state information extracted directly from the simulator.  It does not model full sensor uncertainty, partial observability, or real‑world perception errors.  Noise‑augmented oracle experiments are included to partially address this gap; however, they remain approximations and do not replace a fully realistic perception pipeline.
+- **Oracle Simplifications.** The oracle relies on simplified simulator state. The archived noise-condition labels and summaries do not authenticate all original noise protocols or demonstrate safety under imperfect sensing. Shared monitoring access alone would not establish causal safety benefit.
 
-- **Scope of the STG.**  The Spiral Time Governor is a safety filter, not a hallucination‑reduction method.  STG does not modify the LLM's internal reasoning process, alter its weights, or reduce the rate at which the model produces hallucinated outputs.  Its sole function is to prevent unsafe actions from being executed; hallucinated actions that pass the safety threshold are still executed.
+- **Scope of the STG.** STG is intended as an execution supervisor and does not modify model weights. Its mode named SAFE is a software label, not a certified safety state. The reviewed mode-conditioned counter does not establish incremental physical-safety benefit beyond the shared constraint checker. Differences in recorded H_T can depend on sampling, claim-stream selection, or state feedback and do not establish altered upstream generation.
 
 - **Limited Task Diversity.**  The current proof‑of‑concept focuses on a single locomotion task (dm_control quadruped "escape") and a limited set of action types.  Broader task diversity—spanning manipulation, navigation, multi‑agent coordination, and varied reward structures—is required before claims can be generalised beyond the reported setting.
 
-- **Computational Constraints.**  Multi‑seed experiments (e.g., seeds 0–9 or 40–49) are limited by the available compute budget.  The reported confidence intervals and effect sizes are derived from these seed sets; larger parameter sweeps and additional held‑out seeds would further strengthen statistical confidence in the reported findings.
+- **Computational Constraints.**  Multi‑seed experiments (e.g., seeds 0–9 or 40–49) are limited by the available compute budget.  The configured seed lists cannot be assigned to each historical Figure 3 aggregate from the available records. Historical confidence intervals and effect sizes must remain distinct from independently verified experimental findings.
 
-- **Reproducibility Notes.**  Results may vary slightly across hardware configurations, dm_control versions, and LLM API responses.  Minor numerical differences are expected due to floating‑point non‑determinism, platform‑specific physics solver behaviour, and non‑deterministic LLM sampling.  Core qualitative findings are expected to be stable across these variations, but exact numerical values should not be treated as perfectly reproducible without fixing all environmental dependencies.
+- **Reproducibility Notes.**  Results may vary slightly across hardware configurations, dm_control versions, and LLM API responses.  Minor numerical differences are expected due to floating‑point non‑determinism, platform‑specific physics solver behaviour, and non‑deterministic LLM sampling.  Fixing environmental dependencies supports prospective execution, but it does not resolve the missing original run provenance or independently verify historical physical-safety conclusions.
 
 ---
 
 ## Citation
 
-If you use this code, please cite the companion paper (placeholder — update when published):
+The metadata below retains the historical manuscript title (placeholder — update when published). The title is not evidence that hallucination suppression or physical-safety improvement has been independently verified. If you cite the implementation, also identify the source revision and the [provenance clarification](docs/figure3/README.md):
 
 ```bibtex
 @article{stg2026,

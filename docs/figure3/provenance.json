@@ -1,0 +1,54 @@
+{
+  "manuscript": "JCWR 10161",
+  "figure": 3,
+  "clarification_date": "2026-10-29",
+  "status": "descriptive_historical_aggregates_not_independently_verified_experimental_findings",
+  "source_commit": "8e66205adf0ab0ba738f4e7e1b95894745ecd501",
+  "first_csv_commit": "60e2348ac96f3d590e01e7689d77c4efdd96cfaf",
+  "source_files": [
+    {
+      "path": "results/metrics.csv",
+      "git_blob_sha1": "0909df13e33c68b0f141bf18c91b09af50614543",
+      "sha256": "fa3771485afca5a6853a641cf96a8186cfd04f48cca5de11375a37d13c1da4eb"
+    },
+    {
+      "path": "results/ablations.csv",
+      "git_blob_sha1": "8c1c85fc1820415a055464ea2b445c1fcb61ff01",
+      "sha256": "213576bba984e6997e53b3e201084bae78f6fe6ea0daf5735450cc370ca0ea23"
+    },
+    {
+      "path": "results/sensitivity_delta_phi.csv",
+      "git_blob_sha1": "59580cd7dd49657c2a96bec8e421b3dd88ab13e0",
+      "sha256": "2e7b756317870d609a563443be4c81c95601c219ad4f04300052221c8e90d7f3"
+    }
+  ],
+  "panel_sources": {
+    "A": "results/metrics.csv",
+    "B": "results/ablations.csv",
+    "C": "results/sensitivity_delta_phi.csv",
+    "D": "results/metrics.csv"
+  },
+  "figure_asset": {
+    "path": "docs/figure3/figure3_archived_diagnostics.png",
+    "origin": "user-supplied selected figure, preserved byte for byte",
+    "sha256": "5a2350d43e198c54d2970c63c747f9e7ab8eca1b61a52fe4b1977a8ac097057b",
+    "width_px": 2048,
+    "height_px": 1340,
+    "exact_layout_reproduced_by_legacy_generator": false
+  },
+  "uncertainty": "Panel B uses the archived std column as SD, not confidence intervals; original sample counts and observations are unauthenticated.",
+  "experiments_executed_for_this_update": false,
+  "verified_experimental_findings_for_this_update": [],
+  "verification_scope": [
+    "image byte identity",
+    "numeric label comparison with archived CSVs",
+    "CSV Git blob identity"
+  ],
+  "unresolved": [
+    "original experimental run provenance",
+    "panel-specific seed populations and sample counts",
+    "complete original state/action trajectories",
+    "external-model identities and run records",
+    "cross-version metric equivalence"
+  ]
+}
