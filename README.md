@@ -41,14 +41,14 @@ python run_experiment.py --seeds 0 1 2 --conditions baseline governor
 # 4. Run with verbose per-step output
 python run_experiment.py --conditions governor --seeds 0 --verbose
 
-# 5. Run robustness check (held-out seeds 40–49)
+# 5. Run the configured diagnostic script (seeds 40–49; not historical validation)
 bash scripts/run_robustness.sh
 
 # 6. Recompute metrics from saved results
 python analysis/compute_metrics.py --results_dir results/
 ```
 
-Results are written to `results/` as CSV and JSON files (see [Output Files](#output-files) below).
+These commands describe prospective software runs, not independent verification of archived findings. Results are written to `results/` as CSV and JSON files (see [Output Files](#output-files) below). The configured diagnostic scripts do not by themselves establish robustness or physical-safety benefit.
 
 ---
 
@@ -78,9 +78,9 @@ stg-embodied-poc/
 ├── .gitignore
 ├── CITATION.cff                # Citation metadata for the companion paper
 ├── LICENSE                     # MIT License
-├── PAPER.md                    # Companion paper (manuscript)
+├── PAPER.md                    # Historical manuscript; qualified claims
 ├── README.md
-├── VALIDATION_ANALYSIS.md      # Detailed validation results and statistical analysis
+├── VALIDATION_ANALYSIS.md      # Historical diagnostics; unverified safety effects
 ├── analysis/
 │   ├── __init__.py
 │   └── compute_metrics.py      # Metric computation from episode logs
@@ -121,7 +121,7 @@ stg-embodied-poc/
 ├── run_sensitivity_sweep.py    # One-at-a-time sensitivity sweep over ΔΦ weights (α, β, γ, δ)
 ├── scripts/
 │   ├── run_all.sh              # Full pipeline (all conditions, seeds 0–9)
-│   └── run_robustness.sh       # Robustness check (governor, seeds 40–49)
+│   └── run_robustness.sh       # Diagnostic script (governor, seeds 40–49)
 └── tests/
     ├── test_env.py
     ├── test_governor.py
@@ -149,7 +149,9 @@ stg-embodied-poc/
 | `τ₂`      | 0.55  | VERIFY → SAFE threshold | §3.3 |
 | `φ₀`      | 0.75  | Initial coherence score | §3.2 |
 
-### Experimental Design
+### Configured Experimental Design
+
+The following values are software configuration entries. They do not authenticate the seed population, sample count, or uncertainty of any archived result.
 
 | Parameter            | Value                    | Description |
 |----------------------|--------------------------|-------------|
@@ -166,7 +168,7 @@ stg-embodied-poc/
 | `baseline`   | `always_execute` | 0.45               | Always-execute governor mode; the shared constraint checker still applies |
 | `governor`   | `none`           | 0.45               | Full STG with torsion term |
 | `ablation_a` | `no_delta`       | 0.45               | STG with δ=0 (torsion disabled) |
-| `rag`        | `always_execute` | 0.30               | No governor; reduced hallucination (RAG proxy) |
+| `rag`        | `always_execute` | 0.30               | Always-execute mode with lower configured hallucination probability; not a verified retrieval pipeline |
 
 ### CLI Arguments (`run_experiment.py`)
 
@@ -190,8 +192,8 @@ After running `run_experiment.py`, the `results/` directory contains:
 |------|-------------|
 | `results.json` | Flat per-episode metrics (H_T, violations, success, n_steps) for all conditions/seeds |
 | `summary.csv`  | One row per episode with all computed metrics (written by `compute_metrics.py`) |
-| `metrics.csv`  | Per-condition H_T, violation_rate and success_rate (three primary metrics) |
-| `ablations.csv` | Per-episode ablation comparison (governor vs δ=0, remove_I, remove_C) |
+| `metrics.csv`  | Recorded H_T, diagnostic violation counter and success summary; the archived aggregate file does not establish independent physical outcomes |
+| `ablations.csv` | Generated ablation summaries (governor vs δ=0, remove_I, remove_C); the committed historical aggregates and SD column do not establish significance or component necessity |
 | `<condition>_steps.csv` | Per-step logs for each condition (phi, delta_phi, mode, reward, oracle, …) |
 
 ---
@@ -200,7 +202,7 @@ After running `run_experiment.py`, the `results/` directory contains:
 
 ### Practical / Engineering Limitations
 
-1. **Synthetic vs. physics:** The mock LLM agent produces deterministic sinusoidal actions and rule-based claims.  Real LLM integration would require an API call layer (not included in this PoC).
+1. **Proposal source:** The mock agent produces deterministic sinusoidal actions and rule-based claims. An optional external-LLM API path exists, but the archived `real_llm` aggregates do not authenticate use of that path, the model identity, or the original run records.
 2. **Oracle simplifications:** The `oracle()` method approximates terrain class from the torso x-position and contact count from geom-name matching.  A production system would use richer sensor fusion.
 3. **Task proxy:** The dm_control quadruped "escape" task is a physics-grounded but simplified proxy for the ANYmal-class terrain tasks in the paper.  Custom terrain assets, gait controllers, and task reward shaping are outside the scope of this PoC.
 4. **Single-process execution:** Episodes are run sequentially; wall-clock time scales linearly with `n_seeds × n_conditions × MAX_STEPS`.
@@ -211,11 +213,11 @@ The following limitations are disclosed in the interest of academic transparency
 
 - **Mock LLM vs. Real Reasoning.**  The deterministic mock LLM in `llm_mock/mock_llm_agent.py` does not represent real reasoning or real‑world LLM variability.  The mock agent is used deliberately to isolate the effect of the Spiral Time Governor (STG) without introducing confounding factors such as stochastic token sampling or prompt sensitivity.  The archived `real_llm` condition label does not authenticate the original model identity or run metadata, and its aggregates do not independently establish robustness to non-deterministic outputs.
 
-- **Simplified Environment (dm_control Quadruped).**  `envs/quadruped_terrain.py` uses a controlled dm_control locomotion task as a proxy for embodied decision‑making.  This environment does not capture full real‑world terrain complexity, multi‑contact dynamics, or hardware constraints such as actuator saturation, communication latency, or mechanical compliance.  Results should therefore be interpreted as simulation‑level evidence and should not be taken as direct evidence of transfer to physical robotic platforms.
+- **Simplified Environment (dm_control Quadruped).** The quadruped "escape" task provides a physics-based proxy, not an independently validated safety benchmark. The archived diagnostic counters do not establish safer simulated motion or transfer to hardware, including actuator limits, latency, contact complexity, or mechanical compliance.
 
-- **Oracle Simplifications.**  The oracle used for action verification is simplified and relies on idealized state information extracted directly from the simulator.  It does not model full sensor uncertainty, partial observability, or real‑world perception errors.  Noise‑augmented oracle experiments are included to partially address this gap; however, they remain approximations and do not replace a fully realistic perception pipeline.
+- **Oracle Simplifications.** The oracle relies on simplified simulator state. The archived noise-condition labels and summaries do not authenticate all original noise protocols or demonstrate safety under imperfect sensing. Shared monitoring access alone would not establish causal safety benefit.
 
-- **Scope of the STG.**  The Spiral Time Governor is a safety filter, not a hallucination‑reduction method.  STG does not modify the LLM's internal reasoning process, alter its weights, or reduce the rate at which the model produces hallucinated outputs.  Its intended role is to gate action proposals. The reviewed mode-conditioned violation counter does not establish incremental physical-safety benefit beyond the shared constraint checker.
+- **Scope of the STG.** STG is intended as an execution supervisor and does not modify model weights. Its mode named SAFE is a software label, not a certified safety state. The reviewed mode-conditioned counter does not establish incremental physical-safety benefit beyond the shared constraint checker. Differences in recorded H_T can depend on sampling, claim-stream selection, or state feedback and do not establish altered upstream generation.
 
 - **Limited Task Diversity.**  The current proof‑of‑concept focuses on a single locomotion task (dm_control quadruped "escape") and a limited set of action types.  Broader task diversity—spanning manipulation, navigation, multi‑agent coordination, and varied reward structures—is required before claims can be generalised beyond the reported setting.
 
@@ -227,7 +229,7 @@ The following limitations are disclosed in the interest of academic transparency
 
 ## Citation
 
-If you use this code, please cite the companion paper (placeholder — update when published):
+The metadata below retains the historical manuscript title (placeholder — update when published). The title is not evidence that hallucination suppression or physical-safety improvement has been independently verified. If you cite the implementation, also identify the source revision and the [provenance clarification](docs/figure3/README.md):
 
 ```bibtex
 @article{stg2026,
