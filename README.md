@@ -12,7 +12,15 @@
 
 ## Purpose
 
-The **Spiral-Time Governor** (STG) is a deterministic external supervision layer that wraps a black-box LLM and gates its outputs (claims + actions) based on a scalar instability functional ΔΦ(t), as described in §3.2 of the companion paper.  This repository demonstrates that the STG architecture transfers from the synthetic noise model evaluated in the paper to a real physics simulator, using dm_control's built-in quadruped domain ("escape" task) as a proxy for the custom ANYmal-class terrain tasks described in the paper.  All governor parameters, thresholds, and evaluation metrics are identical to the synthetic testbed v2.2.
+The **Spiral-Time Governor** (STG) is a deterministic external supervision layer that wraps a black-box LLM and gates its outputs (claims + actions) based on a scalar instability functional ΔΦ(t), as described in §3.2 of the companion paper. This repository contains a MuJoCo/dm_control quadruped implementation using the built-in "escape" task as a proxy for legged locomotion. It supports inspection of supervisory logic; the archived results do not independently establish a physical-safety improvement attributable to STG.
+
+### Figure 3 and evidence clarification — 29 October 2026
+
+The historical numerical reports use different aggregate versions and unresolved original run provenance. The reviewed runner counts failed checks on proposed actions conditional on governor mode, while the simulator receives gated actions. A lower diagnostic counter therefore does not establish fewer independently measured physical hazards.
+
+![Figure 3: descriptive archived diagnostic summaries](docs/figure3/figure3_archived_diagnostics.png)
+
+**Figure 3. Archived diagnostic summaries.** The plotted values are descriptive aggregates with unauthenticated original run provenance and sample counts; they do not establish independently measured physical-safety improvement. Panel B error bars are archived standard deviations. *real_llm is a historical source-file label; original model/run records are unauthenticated.* See the [proposed manuscript caption and source mapping](docs/figure3/README.md).
 
 > **Note:** This PoC uses the dm_control quadruped "escape" task as a physics-grounded proxy for the custom ANYmal-class terrain locomotion tasks described in the paper.  The escape task provides realistic contact dynamics and proprioceptive observations without requiring a licensed ANYmal model.
 
@@ -44,19 +52,19 @@ Results are written to `results/` as CSV and JSON files (see [Output Files](#out
 
 ---
 
-## Full Reproducibility (One Command)
+## Reproducing archived figure presentations
 
 **Environment:** Python 3.10+, MuJoCo 3.x (see `requirements.txt` for full dependencies).
 
 All random seeds are fixed in [`config.py`](config.py) (`DEFAULT_SEEDS = list(range(10))`, `BOOTSTRAP_SEED = 77`).
 
-To regenerate **all figures** used in the paper:
+To regenerate the **legacy repository figures** from the embedded aggregates and CSV files:
 
 ```bash
 python images/generate_plots.py
 ```
 
-This script reads the embedded simulation data and writes all eight figures (`fig1_*.png` – `fig8_*.png`) to the `images/` directory.
+This script reads embedded aggregate values and CSV files and writes the eight legacy figures (`fig1_*.png` – `fig8_*.png`) to `images/`. It does not reproduce the selected Figure 3 image above or independently reconstruct the missing original observations. Fixed seeds and regenerated plots do not authenticate the historical numerical contrasts, confidence intervals, or physical-safety claims. See [Figure 3 provenance](docs/figure3/README.md).
 
 ---
 
@@ -155,7 +163,7 @@ stg-embodied-poc/
 
 | Condition    | Ablation         | Hallucination Prob | Description |
 |--------------|------------------|--------------------|-------------|
-| `baseline`   | `always_execute` | 0.45               | No governor; all LLM actions executed |
+| `baseline`   | `always_execute` | 0.45               | Always-execute governor mode; the shared constraint checker still applies |
 | `governor`   | `none`           | 0.45               | Full STG with torsion term |
 | `ablation_a` | `no_delta`       | 0.45               | STG with δ=0 (torsion disabled) |
 | `rag`        | `always_execute` | 0.30               | No governor; reduced hallucination (RAG proxy) |
@@ -201,19 +209,19 @@ After running `run_experiment.py`, the `results/` directory contains:
 
 The following limitations are disclosed in the interest of academic transparency and to support appropriate interpretation of the reported results.
 
-- **Mock LLM vs. Real Reasoning.**  The deterministic mock LLM in `llm_mock/mock_llm_agent.py` does not represent real reasoning or real‑world LLM variability.  The mock agent is used deliberately to isolate the effect of the Spiral Time Governor (STG) without introducing confounding factors such as stochastic token sampling or prompt sensitivity.  A real LLM condition is included only to demonstrate robustness to non‑deterministic outputs; it does not constitute a claim of cognitive modeling.
+- **Mock LLM vs. Real Reasoning.**  The deterministic mock LLM in `llm_mock/mock_llm_agent.py` does not represent real reasoning or real‑world LLM variability.  The mock agent is used deliberately to isolate the effect of the Spiral Time Governor (STG) without introducing confounding factors such as stochastic token sampling or prompt sensitivity.  The archived `real_llm` condition label does not authenticate the original model identity or run metadata, and its aggregates do not independently establish robustness to non-deterministic outputs.
 
 - **Simplified Environment (dm_control Quadruped).**  `envs/quadruped_terrain.py` uses a controlled dm_control locomotion task as a proxy for embodied decision‑making.  This environment does not capture full real‑world terrain complexity, multi‑contact dynamics, or hardware constraints such as actuator saturation, communication latency, or mechanical compliance.  Results should therefore be interpreted as simulation‑level evidence and should not be taken as direct evidence of transfer to physical robotic platforms.
 
 - **Oracle Simplifications.**  The oracle used for action verification is simplified and relies on idealized state information extracted directly from the simulator.  It does not model full sensor uncertainty, partial observability, or real‑world perception errors.  Noise‑augmented oracle experiments are included to partially address this gap; however, they remain approximations and do not replace a fully realistic perception pipeline.
 
-- **Scope of the STG.**  The Spiral Time Governor is a safety filter, not a hallucination‑reduction method.  STG does not modify the LLM's internal reasoning process, alter its weights, or reduce the rate at which the model produces hallucinated outputs.  Its sole function is to prevent unsafe actions from being executed; hallucinated actions that pass the safety threshold are still executed.
+- **Scope of the STG.**  The Spiral Time Governor is a safety filter, not a hallucination‑reduction method.  STG does not modify the LLM's internal reasoning process, alter its weights, or reduce the rate at which the model produces hallucinated outputs.  Its intended role is to gate action proposals. The reviewed mode-conditioned violation counter does not establish incremental physical-safety benefit beyond the shared constraint checker.
 
 - **Limited Task Diversity.**  The current proof‑of‑concept focuses on a single locomotion task (dm_control quadruped "escape") and a limited set of action types.  Broader task diversity—spanning manipulation, navigation, multi‑agent coordination, and varied reward structures—is required before claims can be generalised beyond the reported setting.
 
-- **Computational Constraints.**  Multi‑seed experiments (e.g., seeds 0–9 or 40–49) are limited by the available compute budget.  The reported confidence intervals and effect sizes are derived from these seed sets; larger parameter sweeps and additional held‑out seeds would further strengthen statistical confidence in the reported findings.
+- **Computational Constraints.**  Multi‑seed experiments (e.g., seeds 0–9 or 40–49) are limited by the available compute budget.  The configured seed lists cannot be assigned to each historical Figure 3 aggregate from the available records. Historical confidence intervals and effect sizes must remain distinct from independently verified experimental findings.
 
-- **Reproducibility Notes.**  Results may vary slightly across hardware configurations, dm_control versions, and LLM API responses.  Minor numerical differences are expected due to floating‑point non‑determinism, platform‑specific physics solver behaviour, and non‑deterministic LLM sampling.  Core qualitative findings are expected to be stable across these variations, but exact numerical values should not be treated as perfectly reproducible without fixing all environmental dependencies.
+- **Reproducibility Notes.**  Results may vary slightly across hardware configurations, dm_control versions, and LLM API responses.  Minor numerical differences are expected due to floating‑point non‑determinism, platform‑specific physics solver behaviour, and non‑deterministic LLM sampling.  Fixing environmental dependencies supports prospective execution, but it does not resolve the missing original run provenance or independently verify historical physical-safety conclusions.
 
 ---
 

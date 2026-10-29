@@ -1,5 +1,8 @@
 # VALIDATION ANALYSIS — STG MuJoCo PoC
 
+**Historical results record — clarification dated 29 October 2026.** The numerical tables and statistical narratives below are preserved as archival reports, not independently verified experimental findings. Original run provenance and cross-version equivalence remain unresolved. In the reviewed runner, violations count failed proposed-action checks conditional on mode; this is not an independently measured physical-safety outcome. See [Figure 3 provenance](docs/figure3/README.md), which supersedes conflicting physical-safety, significance, necessity, and robustness interpretations in the historical narrative.
+
+
 **Conditions:** baseline · governor · ablation_a · rag  
 **Seeds:** 0 · 1 · 2 · 3 · 4 (5 seeds × 4 conditions = 20 episodes)  
 **Steps per episode:** 120  
@@ -154,6 +157,15 @@ Measured in-process (Python, N = 50 000 iterations, 3 claims per step).
 
 ---
 
+## Figure 3 — Descriptive archived diagnostics
+
+![Figure 3: descriptive archived diagnostic summaries](docs/figure3/figure3_archived_diagnostics.png)
+
+**Figure 3. Archived diagnostic summaries.** The plotted values are descriptive aggregates with unauthenticated original run provenance and sample counts; they do not establish independently measured physical-safety improvement. Panel B error bars are archived standard deviations. *real_llm is a historical source-file label; original model/run records are unauthenticated.* See the [proposed manuscript caption and source mapping](docs/figure3/README.md).
+
+<details>
+<summary>Historical Figure 8 robustness narrative and caption (retained for provenance; superseded interpretation)</summary>
+
 ## Robustness Validation (Figure 8)
 
 The following subsections report a comprehensive robustness suite designed to test the Spiral-Time Governor (STG) under conditions that exceed the idealised assumptions of the primary experiment. Five axes of variation are evaluated: (1) non-deterministic LLM claim generation, (2) imperfect oracle sensing, (3) structural ablation of the ΔΦ composite score, (4) one-at-a-time (OAT) sensitivity of ΔΦ weight parameters, and (5) the conceptual separation between hallucination rate and safety-violation rate. Results are summarised in Figure 8 and the underlying data are archived in `results/metrics.csv`, `results/ablations.csv`, and `results/sensitivity_delta_phi.csv`.
@@ -244,3 +256,5 @@ The combined results of the robustness validation suite establish five propertie
 ![Figure 8: Robustness Summary](images/fig8_robustness_summary.png)
 
 *Figure 8.* **Robustness summary across noise conditions, ablations, and ΔΦ sensitivity.** All metrics use explicit units: success rate (%), violation rate (unsafe actions per episode), hallucination rate H\_T (fraction), and ΔΦ stability (unitless index). The governor reduces unsafe actions without modifying the underlying LLM, as confirmed by unchanged hallucination rates in physics-grounded MuJoCo validation. *(Top-left)* Violation rate (unsafe actions per episode, left axis) and hallucination rate H\_T (fraction of claims, right axis) for the deterministic governor (`governor`), stochastic LLM agent (`real_llm`), noisy-oracle condition (`noisy_oracle`), and unprotected baseline. *(Top-right)* Ablation study: violation rate (unsafe actions per episode, mean ± SD) for the full governor and three structural ablations (δ = 0, remove\_I, remove\_C), illustrating the non-redundant contribution of each ΔΦ component. *(Bottom-left)* Sensitivity analysis: success rate (%, left axis) and violation rate (unsafe actions per episode, left axis) alongside ΔΦ stability (unitless index, right axis) as a function of the ΔΦ weight-factor multiplier (0.70 – 1.30×). ΔΦ stability values are not converted to percent. *(Bottom-right)* Success rate (%, left axis) and violation rate (unsafe actions per episode, right axis) for mock-LLM and real-LLM conditions, showing STG performance under non-deterministic claim generation.
+
+</details>

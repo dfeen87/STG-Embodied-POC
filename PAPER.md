@@ -1,5 +1,8 @@
 # Deterministic Spiral-Time Governance for Hallucination Suppression in LLM-Controlled Climbing and Walking Robots
 
+**Historical manuscript record — clarification dated 29 October 2026.** The text, tables, and legacy illustrations below retain historical claims for provenance. They are not independently verified physical-safety findings or the latest journal Word draft. The 11.4/4.7, 12.4/5.0, and 13.24/4.87 reports have not been reconciled as the same protocol or seed population. The current descriptive Figure 3 and its evidence limits are documented in [Figure 3 provenance](docs/figure3/README.md); that clarification supersedes conflicting safety, necessity, and robustness interpretations below.
+
+
 **Marcel Krüger¹ · Don Michael Feeney Jr.²**
 
 ¹ Independent Researcher, Germany
@@ -529,6 +532,8 @@ All analyses use **α = 0.05** (two-tailed). CI: bootstrap percentile (B = 2,000
 
 ### 8.2 · Embodied MuJoCo Validation (Companion PoC)
 
+**Historical report.** The following numerical comparison and intervals are retained as recorded, with unauthenticated original run provenance. They do not establish an independently measured physical-safety benefit.
+
 To evaluate whether the Spiral-Time Governor transfers to a physics-grounded setting, we implemented a minimal embodied validation using the **dm_control quadruped domain** (MuJoCo backend). The `"escape"` task provides realistic contact dynamics, joint actuation, and proprioceptive observations.
 
 **Protocol consistency.** All STG parameters (wR, wI, wC, α, β, γ, δ, τ₁, τ₂, ϕ₀) were kept identical to those used in the synthetic evaluation. No parameter retuning was performed for the embodied setting. Experimental seeds (0–9) were used for primary reporting, with additional validation seeds (40–49) confirming consistent qualitative behavior. Statistical analysis follows the bootstrap protocol defined in Section 8.1 (B = 2000 resamples).
@@ -594,7 +599,16 @@ To evaluate whether the Spiral-Time Governor transfers to a physics-grounded set
   <text x="340" y="258" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Illustration H: MuJoCo validation results. Left: violation counts with 95% CIs. Right: EXECUTE mode fraction (Table 5).</text>
 </svg>
 
-*See also: **Figure 2** in the paper (fig8_robustness_summary.png) — full 4-panel robustness summary.*
+### Figure 3 — Descriptive archived diagnostics
+
+![Figure 3: descriptive archived diagnostic summaries](docs/figure3/figure3_archived_diagnostics.png)
+
+**Figure 3. Archived diagnostic summaries.** The plotted values are descriptive aggregates with unauthenticated original run provenance and sample counts; they do not establish independently measured physical-safety improvement. Panel B error bars are archived standard deviations. *real_llm is a historical source-file label; original model/run records are unauthenticated.* See the [proposed manuscript caption and source mapping](docs/figure3/README.md).
+
+<details>
+<summary>Historical four-panel illustration and claims (retained for provenance; superseded by Figure 3)</summary>
+
+
 
 <!-- FIGURE 2 (paper): Robustness Summary — 4-panel SVG recreation -->
 <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg">
@@ -788,6 +802,8 @@ To evaluate whether the Spiral-Time Governor transfers to a physics-grounded set
   <text x="340" y="530" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#333">Figure 2: Robustness summary of the Spiral-Time Governor (STG) across four experimental axes.</text>
   <text x="340" y="544" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#555">(A) Violations ↓ while H_T unchanged in MuJoCo. (B) All ΔΦ components are necessary. (C) Stable under ±30% weight variation. (D) Works under real LLM.</text>
 </svg>
+
+</details>
 
 Reproducible implementation: **https://github.com/dfeen87/stg-embodied-poc**
 
